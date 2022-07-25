@@ -1,0 +1,45 @@
+.exitEditBtn{
+    margin:3%;
+}
+.saveExitEditBtn{
+    margin:3%;
+    width: 200px;;
+
+}
+.saveEditBtn{
+    margin:3%;
+
+}
+
+
+.changeEditBtn{
+    margin:3%;
+    width: 200px;;
+
+}
+
+.botones{
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    left: 38%;
+    top: 89%;
+    height: 70px;
+    
+}
+
+#potree_sidebar_container{
+    display: none;
+    top:0;
+}
+
+#change , 
+#save, 
+#saveExit,
+#exit
+{
+    display: none;
+}
+
+#potree_quick_buttons{display: none;}
+

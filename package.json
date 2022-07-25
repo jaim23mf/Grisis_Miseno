@@ -1,0 +1,28 @@
+{
+  "name": "potree-test",
+  "version": "1.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "private": true,
+  "dependencies": {
+    "ngx-simple-modal": "^1.4.17",
+    "@angular/platform-browser": "^14.0.0",
+    "@angular/platform-browser-dynamic": "^14.0.0",
+    "@angular/forms": "^14.0.0",
+    "@angular/common": "^14.0.0",
+    "@babylonjs/core": "^5.11.0",
+    "@babylonjs/gui": "^5.11.0",
+    "@babylonjs/loaders": "^5.11.0",
+    "@babylonjs/materials": "^5.11.0",
+    "@angular/core": "^14.0.0"
+
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^14.0.1"
+  }
+}

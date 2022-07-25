@@ -1,2 +1,12 @@
 node_modules
-angular
+*.angular
+*.pack
+*.gltf
+src/assets/gtest/octree.bin
+src/assets/gtest/metadata.json5
+src/assets/gtest/metadata.json
+src/assets/gtest/hierarchy.bin
+src/assets/models/BoxAnimated0.bin
+src/assets/models/scene.bin
+src/assets/models/textures/phong5_baseColor.jpeg
+*.rar

@@ -5,6 +5,8 @@ import { SceneLoader } from "@babylonjs/core";
 import { AdvancedDynamicTexture ,Button, ColorPicker, Control, InputText, StackPanel, TextBlock  , MultiLine ,RadioGroup,SelectionPanel}  from "@babylonjs/gui";
 import { POI } from '../utils/POI';
 
+import "@babylonjs/loaders/glTF"
+
 import { EClass } from '../utils/EClass';
 import { SimpleModalService } from "ngx-simple-modal";
 import { ModalEdit3dComponent } from '../modal-edit3d/modal-edit3d.component';

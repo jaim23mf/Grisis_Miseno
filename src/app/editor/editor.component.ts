@@ -82,7 +82,7 @@ export class EditorComponent implements OnInit {
 
     if(this.data.type == "Potree"){
     
-      Potree.loadProject(window.viewer,this.data,function(e:any){
+      Potree.loadProject(window.viewer,this.data,this.url,function(e:any){
         window.viewer.scene.addPointCloud(e.pointcloud);
         //e.pointcloud.position.z = 0;
         let material = e.pointcloud.material;
@@ -142,7 +142,7 @@ export class EditorComponent implements OnInit {
       
       if(this.data.type == "Potree"){
       
-        Potree.loadProject(window.viewer,this.data,function(e:any){
+        Potree.loadProject(window.viewer,this.data,this.url,function(e:any){
           window.viewer.scene.addPointCloud(e.pointcloud);
           //e.pointcloud.position.z = 0;
           let material = e.pointcloud.material;

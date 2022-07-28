@@ -64343,15 +64343,16 @@ void main() {
 			matcap: material.matcap,
 		};
 
+
 		const pcdata = {
 			name: pointcloud.name,
-			url: pointcloud.pcoGeometry.url,
+			url: pointcloud.pcoGeometry.url.substring(pointcloud.pcoGeometry.url.lastIndexOf("/")+1),//pointcloud.pcoGeometry.url,
 			position: pointcloud.position.toArray(),
 			rotation: pointcloud.rotation.toArray(),
 			scale: pointcloud.scale.toArray(),
 			material: jsonMaterial,
 		};
-
+		console.log(pcdata);
 		return pcdata;
 	}
 
@@ -64580,7 +64581,8 @@ void main() {
 			"modelType": "pointscloud", // can be 3d or pointscloud
 			"data":  data
 		  }
-	
+		  console.log(bodeRes);
+		  console.log(data_save_api);
 		 fetch(data_save_api, {
 			  method: 'POST',
 			  headers: {
@@ -89136,7 +89138,7 @@ ENDSEC
 							const json = JSON.parse(text);
 
 							if(json.type === "Potree"){
-								Potree.loadProject(viewer, json);
+								Potree.loadProject(viewer, json,url);
 							}
 						}catch(e){
 							console.error("failed to parse the dropped file as JSON");

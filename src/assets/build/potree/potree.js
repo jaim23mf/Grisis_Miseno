@@ -65110,7 +65110,7 @@ void main() {
 
 	}
 
-	function loadPointCloud(viewer, data){
+	function loadPointCloud(viewer, data,url){
 
 		let loadMaterial = (target) => {
 
@@ -65168,7 +65168,8 @@ void main() {
 				return;
 			}
 
-			Potree.loadPointCloud(data.url, data.name, (e) => {
+			console.log("AA "+ url + " data " + data.url);
+			Potree.loadPointCloud(data.url,data.name,url, (e) => {
 				const {pointcloud} = e;
 
 				pointcloud.position.set(...data.position);
@@ -65418,7 +65419,7 @@ void main() {
 		viewer.setClassifications(classifications);
 	}
 
-	async function loadProject(viewer, data){
+	async function loadProject(viewer, data,url){
 
 		if(data.type !== "Potree"){
 			console.error("not a valid Potree project");
@@ -65431,7 +65432,7 @@ void main() {
 
 		const pointcloudPromises = [];
 		for(const pointcloud of data.pointclouds){
-			const promise = loadPointCloud(viewer, pointcloud);
+			const promise = loadPointCloud(viewer, pointcloud,url);
 			pointcloudPromises.push(promise);
 		}
 
@@ -88770,7 +88771,7 @@ ENDSEC
 		}
 
 		async loadProject(url){
-
+			console.log("BB " + url);
 			const response = await fetch(url);
 		
 			const text = await response.text();
@@ -88778,7 +88779,7 @@ ENDSEC
 			// const json = JSON.parse(text);
 
 			if(json.type === "Potree"){
-				Potree.loadProject(viewer, json);
+				Potree.loadProject(viewer, json,url);
 			}
 
 			//Potree.loadProject(this, url);
@@ -90202,7 +90203,10 @@ ENDSEC
 	let resourcePath = exports.scriptPath + '/resources';
 
 
-	function loadPointCloud$1(path, name, callback){
+	function loadPointCloud$1(path, name, url, callback){
+
+		let p = url.substring(0, url.lastIndexOf("/"));
+		path=  p+"/"+path;
 		let loaded = function(e){
 			e.pointcloud.name = name;
 			callback(e);

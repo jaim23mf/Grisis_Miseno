@@ -3,9 +3,9 @@ import { PBRMetallicRoughnessMaterial } from '@babylonjs/core';
 import { SimpleModalService } from 'ngx-simple-modal';
 import { ModalEdit3dComponent } from '../modal-edit3d/modal-edit3d.component';
 
-declare function iniciarView(ruta:any,modelo:any,data:any):any;
-declare function iniciarEdit(ruta:any,modelo:any,data_save_api:any,data:any):any;
-declare function savePotree():any;
+//declare function iniciarView(ruta:any,modelo:any,data:any):any;
+declare let Potree:any;
+declare let $:any;
 
 @Component({
   selector: 'app-editor',
@@ -45,12 +45,120 @@ export class EditorComponent implements OnInit {
      document.getElementById('change')!.style.display = 'block';
      document.getElementById('exit')!.style.display = 'block';
 
-    iniciarEdit(this.url, this.name,this.data_save_api,this.data);}
+  this.iniciarEdit();
+
+
+  //let viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
+
+  }
     else{
       console.log("?");
-    iniciarView(this.url,this.name,this.data); 
+    this.iniciarView(); 
     }
   }
+
+  /**Editor**/
+  iniciarEdit(){
+    //this.name = modelo;
+    //this.data_save_api = data_save_api;
+    //this.url = ruta;
+    //this.data = data;
+    
+    window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
+    
+    this.clearViewer(window.viewer);
+    
+    let sidebarContainer = $('.potree_menu_toggle');
+    
+    if(sidebarContainer.length >0)sidebarContainer[0].remove();
+    //sidebarContainer.remove();
+      window.viewer.loadGUI().then( () => {
+        window.viewer.setLanguage('en');
+        // $("#menu_filters").next().show();
+        window.viewer.toggleSidebar();
+      });
+
+      window.viewer.loadSettingsFromURL();
+
+    if(this.data.type == "Potree"){
+    
+      Potree.loadProject(window.viewer,this.data,function(e:any){
+        window.viewer.scene.addPointCloud(e.pointcloud);
+        //e.pointcloud.position.z = 0;
+        let material = e.pointcloud.material;
+        window.pointcloud = e.pointcloud;
+        window.viewer.fitToScreen();
+      // material.size = 0.8;
+        material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+    
+    
+      });
+    
+    }
+    else{
+      window.viewer.loadProject(this.url, "", function(e:any){
+        window.viewer.scene.addPointCloud(e.pointcloud);
+        //e.pointcloud.position.z = 0;
+        let material = e.pointcloud.material;
+        window.pointcloud = e.pointcloud;
+        window.viewer.fitToScreen();
+      // material.size = 0.8;
+        material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+    
+      });
+    }
+    
+    
+    }
+
+    clearViewer(viewer:any) { 
+      let scene = new Potree.Scene(); 
+      viewer.setScene(scene); 
+    }
+    
+    savePotree(){
+      let data = Potree.saveProject(window.viewer,this.url,this.name,this.data_save_api);
+    }
+
+    /**VIEWER **/
+    iniciarView(){
+      // import * as Potree from "../src/Potree.js";
+      console.log("Iniciamos POTREE VIEW");
+      
+      window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
+      
+      //viewer.setEDLEnabled(true);
+      window.viewer.setFOV(60);
+      window.viewer.setPointBudget(5_000_000);
+      window.viewer.loadSettingsFromURL();
+      
+      
+      window.viewer.loadGUI().then( () => {
+        window.viewer.setLanguage('en');
+        // $("#menu_filters").next().show();
+        window.viewer.toggleSidebar();
+      });
+      
+      
+      if(this.data.type == "Potree"){
+      
+        Potree.loadProject(window.viewer,this.data,function(e:any){
+          window.viewer.scene.addPointCloud(e.pointcloud);
+          //e.pointcloud.position.z = 0;
+          let material = e.pointcloud.material;
+          window.pointcloud = e.pointcloud;
+          window.viewer.fitToScreen();
+        // material.size = 0.8;
+          material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+        });
+      
+      }
+      else{
+        window.viewer.loadProject(this.url);
+      }
+      
+      
+      }
 
   showConfirm() {
     let disposable = this.simpleModalService.addModal(ModalEdit3dComponent, {
@@ -81,7 +189,7 @@ export class EditorComponent implements OnInit {
     this.url = eventData.data.url;
     this.name = eventData.data.name;
     this.data = {};
-    iniciarEdit(this.url, this.name,this.data_save_api,this.data);
+    this.iniciarEdit();
   }
 
   showSave(){
@@ -93,7 +201,7 @@ export class EditorComponent implements OnInit {
     .subscribe((data: any)=>{
         //We get modal result
         if(data) {
-          savePotree();
+          this.savePotree();
         }
   
     });
@@ -109,7 +217,7 @@ export class EditorComponent implements OnInit {
         //We get modal result
         if(data) {
             console.log(data);
-            savePotree();
+            this.savePotree();
             window.postMessage({
               "type": "pointscloud.close" // For 3d
               });

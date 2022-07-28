@@ -7,8 +7,14 @@ import { Editor3dComponent } from './editor3d/editor3d.component';
 import { SimpleModalModule } from 'ngx-simple-modal';
 import { ModalEdit3dComponent } from './modal-edit3d/modal-edit3d.component';
 import { HttpClientModule } from '@angular/common/http';
-
+declare global {
+  interface Window {
+    pointcloud?: any;
+    viewer?:any;
+  }
+}
 @NgModule({
+  
   declarations: [
     AppComponent,
     EditorComponent,
@@ -24,5 +30,6 @@ import { HttpClientModule } from '@angular/common/http';
   ],
   providers: [],
   bootstrap: [AppComponent]
+  
 })
 export class AppModule { }

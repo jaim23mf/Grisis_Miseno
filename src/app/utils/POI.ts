@@ -4,6 +4,7 @@ import { Color3 } from "@babylonjs/core";
 
 export class POI{
     name:string;
+    sensorId:string;
     private title:string;
     x:number;
     y:number;
@@ -16,6 +17,7 @@ export class POI{
 
     constructor(title: string,x:number,y:number,z:number,id:number,titleColor:string) {
         this.name = "No-Name";
+        this.sensorId = title;
         this.title = title;
         this.x = x ; 
         this.y = y ;

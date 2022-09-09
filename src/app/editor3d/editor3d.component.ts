@@ -2,7 +2,12 @@ import { Component, Input, OnInit } from '@angular/core';
 import { Engine, Scene, ArcRotateCamera, Vector3,  MeshBuilder,  Color3,  PointerEventTypes, StandardMaterial, HemisphericLight, HighlightLayer, Color4, AbstractMesh, DeepImmutableObject , DynamicTexture, Mesh, SceneSerializer } from "@babylonjs/core";
 import { SceneLoader } from "@babylonjs/core";
 
-import { AdvancedDynamicTexture ,Button, ColorPicker, Control, InputText, StackPanel, TextBlock  , MultiLine ,RadioGroup,SelectionPanel}  from "@babylonjs/gui";
+import { AdvancedDynamicTexture ,Button, ColorPicker, Control, InputText, StackPanel, TextBlock  , MultiLine ,RadioGroup,SelectionPanel, Grid}  from "@babylonjs/gui";
+
+//declare let AdvancedDynamicTexture: any ;
+
+
+
 import { POI } from '../utils/POI';
 
 import "@babylonjs/loaders/glTF"
@@ -10,6 +15,7 @@ import "@babylonjs/loaders/glTF"
 import { EClass } from '../utils/EClass';
 import { SimpleModalService } from "ngx-simple-modal";
 import { ModalEdit3dComponent } from '../modal-edit3d/modal-edit3d.component';
+import { gridPixelShader } from '@babylonjs/materials/grid/grid.fragment';
 
 @Component({
   selector: 'app-editor3d',
@@ -54,7 +60,7 @@ export class Editor3dComponent implements OnInit {
 
     }, false);
 
-    var font_type = "Arial";
+  var font_type = "Arial";
   const view = document.getElementById("renderCanvas") as HTMLCanvasElement
   var engine = new Engine(view, true)
   var scene = new Scene(engine)
@@ -62,7 +68,7 @@ export class Editor3dComponent implements OnInit {
   
   //Añadimos la Interfaz de usuario
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI",true,scene);
-  var panel = new StackPanel();
+  var grid = new Grid();
   var textInputX = new InputText()
   var textInputY = new InputText()
   var textInputZ = new InputText()
@@ -99,7 +105,7 @@ let setButtons = function(){
   button2.background = enabled_edit?"red":"#0069d9";
 
   if(!enabled_edit){
-      advancedTexture.removeControl(panel);
+      advancedTexture.removeControl(grid);
   }
 
   if(currentMesh != null)hl.removeMesh(currentMesh);
@@ -155,8 +161,6 @@ let createScene = () =>{
 }
 
   SceneLoader.Append(this.url, '', scene, function (meshes) {
-
-
 
       //Camara
       camera.attachControl(view,true);
@@ -238,23 +242,37 @@ let addPoint = (vector:Vector3, poi:POI|null) =>{
    
  //Set font type
 	
- //Set width an height for plane
-   var planeWidth = 3;
+
+   var text = "No-Name";
+   if(poi != null){text = poi.name}
+
+   var DTHeight = 1.5 * 25; //or set as wished
    var planeHeight = 1;
+
+   //Calcultae ratio
+   var ratio = planeHeight/DTHeight;
+
+   var temp = new DynamicTexture("DynamicTexture", 64, scene);
+   var tmpctx = temp.getContext();
+   tmpctx.font =  "25px " + font_type;;
+   let DTWidth= tmpctx.measureText(text).width + 8;
+   console.log(DTWidth);
+
+   //Set width an height for plane
+   var planeWidth = DTWidth * ratio;
 
    //Create plane
    var plane = MeshBuilder.CreatePlane("plane", {width:planeWidth, height:planeHeight}, scene);
 
    //Set width and height for dynamic texture using same multiplier
-   var DTWidth = planeWidth * 45;
-   var DTHeight = planeHeight * 45;
+   //var DTWidth = planeWidth * 45;
+   //var DTHeight = planeHeight * 45;
 
    //Set text
-   var text = "No-Name";
-   if(poi != null){text = poi.name}
+   
 
    //Create dynamic texture
-   var dynamicTexture = new DynamicTexture("DynamicTexture", {width:DTWidth, height:DTHeight}, scene);
+   var dynamicTexture = new DynamicTexture("DynamicTexture", {width:DTWidth, height:DTHeight}, scene,false);
    //Check width of text for given font type at any size of font
    var ctx = dynamicTexture.getContext();
     var size = 12; //any value will work
@@ -265,23 +283,26 @@ let addPoint = (vector:Vector3, poi:POI|null) =>{
    var ratio = textWidth/size;
  
  //set font to be actually used to write text on dynamic texture
-   var font_size = Math.floor(DTWidth / (ratio * 1.5)); //size of multiplier (1) can be adjusted, increase for smaller text
+   var font_size = 25;//Math.floor(DTWidth / (ratio * 1.5)); //size of multiplier (1) can be adjusted, increase for smaller text
    var font = font_size + "px " + font_type;
  //Draw text
- let titleColor = "White";
-   dynamicTexture.drawText(text, null, null, font, "#FFFFFF", null, true,true);
-   if(poi != null && poi.titleColor == "Colored") {
-    titleColor = "Colored";
-    dynamicTexture.drawText(text, null, null, font, "black", "white", true,true);
+ let titleColor = "#ffffff";
+   if(poi != null) {
+    titleColor = poi.titleColor;
+    let color:Color3 = new Color3(poi.color.r,poi.color.g,poi.color.b);
+    console.log(color.toHexString());
+    dynamicTexture.drawText(text, null, null, font, poi.titleColor, color.toHexString(),true,true);
+  }
+  else{
+    dynamicTexture.drawText(text, null, null, font, "#ffffff", null,true,true);
+
   }
 
    //dynamicTexture.wRotationCenter = Math.PI;
    //create material
    var mat = new StandardMaterial("mat", scene);
-   //mat.diffuseTexture = dynamicTexture;
-   mat.emissiveTexture = dynamicTexture;
-   mat.diffuseColor = Color3.Blue();
-   //apply material
+   mat.diffuseTexture = dynamicTexture;
+   //mat.diffuseColor = Color3.Blue();
    plane.material = mat;
 
    let seis = punto.position.y <0 ? -6:6;
@@ -332,14 +353,16 @@ let pointerDown = (mesh: AbstractMesh)=>{
       window.postMessage({
         "type": "3d.sensor.click",
         "data": {
-          "name":this.Eclass[i].POIS.name
+          "name":this.Eclass[i].POIS.name,
+          "sensorId" : this.Eclass[i].POIS.sensoId
         }
         });
 
         window.top!.postMessage({
           "type": "3d.sensor.click",
           "data": {
-            "name":this.Eclass[i].POIS.name
+            "name":this.Eclass[i].POIS.name,
+            "sensorId" : this.Eclass[i].POIS.sensoId
           }
           });
     }
@@ -358,16 +381,48 @@ let elemDown =  (mesh: any,id: any) => {
   //let selectedPOI = this.POIS[id];
   let selectedPOI = this.Eclass[id].POIS;
 
-  panel.dispose();
-  panel = new StackPanel();
-  panel.spacing = 5;
+  grid.dispose();
+  /*panel.spacing = 5;
   panel.width = "300px";
   panel.top = "25px";
   panel.isVertical = true;
   panel.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
   panel.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
   advancedTexture.removeControl(panel);
-  advancedTexture.addControl(panel);
+  advancedTexture.addControl(panel);*/
+
+
+  grid = new Grid();
+  //panel.addControl(grid);
+  grid.height = "800px";
+  grid.top = "25px";
+  grid.left = "50px";
+  //grid.conten = "5px";
+  grid.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+  grid.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+  advancedTexture.removeControl(grid);
+  advancedTexture.addControl(grid);
+
+  grid.addColumnDefinition(20,true);
+  grid.addColumnDefinition(150,true);
+  grid.addColumnDefinition(20,true);
+  grid.addRowDefinition(25,true);//0
+  grid.addRowDefinition(25,true);//1
+  grid.addRowDefinition(25,true);//2
+  grid.addRowDefinition(25,true);//3
+  grid.addRowDefinition(25,true);//4
+  grid.addRowDefinition(25,true);//5
+  grid.addRowDefinition(25,true);//6
+  grid.addRowDefinition(150,true);//7
+  grid.addRowDefinition(25,true);//8
+  grid.addRowDefinition(150,true);//9
+  grid.addRowDefinition(25,true);//10
+  grid.addRowDefinition(25,true);//11
+  grid.addRowDefinition(25,true);//12
+  grid.addRowDefinition(25,true);//13
+  grid.addRowDefinition(25,true);//14
+  grid.addRowDefinition(25,true);//15
+  grid.addRowDefinition(80,true);//16
 
 
 
@@ -376,7 +431,7 @@ let elemDown =  (mesh: any,id: any) => {
   textBlock.color = "black"
   textBlock.height = "15px";
   textBlock.fontSize = 15;
-  panel.addControl(textBlock);     
+  grid.addControl(textBlock,0,1);     
 
 
   var textInputTitle = new InputText()
@@ -390,16 +445,39 @@ let elemDown =  (mesh: any,id: any) => {
   textInputTitle.fontSize = 15;
 
   textInputTitle.onTextChangedObservable.add((value)=>{
-          //mesh.name = value.text;
           selectedPOI.name = value.text;
-          if(w){
-            setColorTitle(0);
-          }
-          else{
-            setColorTitle(1);
-          }
+
+          setColorTitle(selectedPOI.titleColor);
   });
-  panel.addControl(textInputTitle);
+
+
+  var textBlock = new TextBlock();
+  textBlock.text = "Sensor ID:";
+  textBlock.color = "black"
+  textBlock.height = "15px";
+  textBlock.fontSize = 15;
+
+  grid.addControl(textInputTitle,1,1);
+  grid.addControl(textBlock,2,1);    
+
+
+  var textInputSensorId = new InputText()
+  textInputSensorId.width = "100px";
+  textInputSensorId.maxWidth = "100px";
+  textInputSensorId.height = "20px";
+  textInputSensorId.text = selectedPOI.sensorId;
+  textInputSensorId.color = "black";
+  textInputSensorId.background = "white";
+  textInputSensorId.focusedBackground = "green";
+  textInputSensorId.fontSize = 15;
+
+  textInputSensorId.onTextChangedObservable.add((value)=>{
+          selectedPOI.sensorId = value.text;
+  });
+  grid.addControl(textInputSensorId,3,1);
+
+
+
 
 
   var textBlock = new TextBlock();
@@ -407,7 +485,32 @@ let elemDown =  (mesh: any,id: any) => {
   textBlock.color = "black"
   textBlock.height = "15px";
   textBlock.fontSize = 15;
-  panel.addControl(textBlock);  
+  grid.addControl(textBlock,4,1);  
+
+
+
+
+  let buttonLYS =  Button.CreateSimpleButton("buttonLYS", "+");
+  buttonLYS.width = "20px"
+  buttonLYS.height = "20px";
+  //button4.top = "50px";
+  buttonLYS.color = "black";
+  buttonLYS.cornerRadius = 5;
+  buttonLYS.background = "white";
+  buttonLYS.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+
+  grid.addControl(buttonLYS,5,0);  
+
+  let buttonLYR =  Button.CreateSimpleButton("buttonLYR", "-");
+  buttonLYR.width = "20px"
+  buttonLYR.height = "20px";
+  //button4.top = "50px";
+  buttonLYR.color = "black";
+  buttonLYR.cornerRadius = 5;
+  buttonLYR.background = "white";
+ 
+  //panel.addControl(buttonLYR);  
+  grid.addControl(buttonLYR,5,2);  
 
   var textInputTitlePos = new InputText()
   textInputTitlePos.width = "100px";
@@ -426,90 +529,39 @@ let elemDown =  (mesh: any,id: any) => {
           this.Eclass[id].plane2.position.y= selectedPOI.y + a;
 
   });
-  panel.addControl(textInputTitlePos);
 
-  var textBlock = new TextBlock();
-  textBlock.text = "Position X:";
-  textBlock.color = "black"
-  textBlock.height = "15px";
-  textBlock.fontSize = 15;
-  panel.addControl(textBlock); 
+  buttonLYS.onPointerUpObservable.add(() => {
+    let a:number = +textInputTitlePos.text;
+    a++;
+    textInputTitlePos.text = a.toString();
 
-
-  textInputX.width = "100px";
-  textInputX.maxWidth = "100px";
-  textInputX.height = "20px";
-  textInputX.text = mesh.position.x;
-  textInputX.color = "black";
-  textInputX.background = "white";
-  textInputX.focusedBackground = "green";
-  textInputX.fontSize = 15;
-
-  textInputX.onTextChangedObservable.add(function(value){
-      mesh.position.x = +value.text;
-      selectedPOI.x = +value.text;
-      //startingPoint = mesh.position;
+    selectedPOI.titlePos = a;
+    this.Eclass[id].plane.position.y= selectedPOI.y + a;
+    this.Eclass[id].plane2.position.y= selectedPOI.y + a;
   });
-  panel.addControl(textInputX);
 
+  buttonLYR.onPointerUpObservable.add(() => {
+    let a:number = +textInputTitlePos.text;
+    a--;
+    textInputTitlePos.text = a.toString();
 
-  var textBlock = new TextBlock();
-  textBlock.text = "Position Y:";
-  textBlock.color = "black"
-  textBlock.height = "15px";
-  textBlock.fontSize = 15;
-
-  panel.addControl(textBlock); 
-
-
-  textInputY.width = "100px";
-  textInputY.maxWidth = "100px";
-  textInputY.height = "20px";
-  textInputY.text = mesh.position.y;
-  textInputY.color = "black";
-  textInputY.background = "white";
-  textInputY.focusedBackground = "green";
-  textInputY.fontSize = 15;
-
-  textInputY.onTextChangedObservable.add(function(value){
-      mesh.position.y = +value.text;
-      selectedPOI.y = +value.text;
-      //startingPoint = mesh.position;
+    selectedPOI.titlePos = a;
+    this.Eclass[id].plane.position.y= selectedPOI.y + a;
+    this.Eclass[id].plane2.position.y= selectedPOI.y + a;
   });
-  panel.addControl(textInputY);
+  //panel.addControl(textInputTitlePos);
+  grid.addControl(textInputTitlePos,5,1);  
 
 
   var textBlock = new TextBlock();
-  textBlock.text = "Position Z:";
+  textBlock.text = "Label Color:";
   textBlock.color = "black"
   textBlock.height = "15px";
-  textBlock.fontSize = 15;
-  panel.addControl(textBlock); 
-
-  textInputZ.width = "100px";
-  textInputZ.maxWidth = "100px";
-  textInputZ.height = "20px";
-  textInputZ.text = mesh.position.z;
-  textInputZ.color = "black";
-  textInputZ.background = "white";
-  textInputZ.fontSize = 15;
-  textInputZ.focusedBackground = "green";
-  textInputZ.onTextChangedObservable.add(function(value){
-      mesh.position.z = +value.text;
-      selectedPOI.z = +value.text;
-      //startingPoint = mesh.position;
-  });
-  panel.addControl(textInputZ);
-
-  var textBlock = new TextBlock();
-  textBlock.text = "Color:";
-  textBlock.color = "black"
-  textBlock.height = "15px";
-  textBlock.top = "20px";
+  textBlock.top = "5px";
   textBlock.fontSize = 15;
 
-  panel.addControl(textBlock);     
-
+  //panel.addControl(textBlock);     
+  grid.addControl(textBlock,6,1);  
   var picker = new ColorPicker();
   picker.value = currentMesh.material.emissiveColor;
   picker.height = "150px";
@@ -518,85 +570,297 @@ let elemDown =  (mesh: any,id: any) => {
 
   picker.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
   picker.onValueChangedObservable.add((value) => { // value is a color3
-      currentMesh.material.emissiveColor.copyFrom(value);
-      currentMesh.material.specularColor.copyFrom(value);
+      //currentMesh.material.emissiveColor.copyFrom(value);
+      //currentMesh.material.specularColor.copyFrom(value);
       this.Eclass[id].plane.material.diffuseColor.copyFrom(value);
       this.Eclass[id].lineas.color = value.toHexString();
       selectedPOI.color = value;
-
+      setColorTitle(this.Eclass[id].POIS.titleColor);
   });
 
-  panel.addControl(picker);   
+  //panel.addControl(picker);   
+  grid.addControl(picker,7,1);  
 
-   //Boton Guardar
-   /*let button3 =  Button.CreateSimpleButton("but3", "Save");
-   button3.width = "75px"
-   button3.height = "75px";
-   //button2.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-   //button2.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-   button3.top = "50px";
-   button3.paddingTop = "25px";
-   button3.color = "white";
-   button3.cornerRadius = 20;
-   button3.background = "blue";
-  
-   button3.onPointerUpObservable.add(() => {
-          saveData(this.POIS);
-   });
-   panel.addControl(button3);  */
 
  
-  let setColorTitle = (but: any) => {   
-    var ctx = this.Eclass[id].text.getContext();
+   var textBlock = new TextBlock();
+   textBlock.text = "Text Color:";
+   textBlock.color = "black"
+   textBlock.height = "15px";
+   textBlock.top = "5px";
+   textBlock.fontSize = 15;
+ 
+   grid.addControl(textBlock,8,1);     
+ 
+   var pickerText = new ColorPicker();
+   pickerText.value = this.Eclass[id].POIS.titleColor;
+   pickerText.height = "150px";
+   pickerText.width = "150px";
+   pickerText.paddingTop = "10px";
+ 
+   pickerText.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+   pickerText.onValueChangedObservable.add((value) => { // value is a color3
+        selectedPOI.titleColor = value;
+        setColorTitle(value.toHexString());
+   });
+ 
+   grid.addControl(pickerText,9,1);   
+
+
+
+   var textBlock = new TextBlock();
+   textBlock.text = "Position X:";
+   textBlock.color = "black"
+   textBlock.height = "15px";
+   textBlock.fontSize = 15;
+   grid.addControl(textBlock,10,1); 
+ 
+ 
+   let buttonPXS =  Button.CreateSimpleButton("buttonPXS", "+");
+   buttonPXS.width = "20px"
+   buttonPXS.height = "20px";
+   //button4.top = "50px";
+   buttonPXS.color = "black";
+   buttonPXS.cornerRadius = 5;
+   buttonPXS.background = "white";
+  
+   grid.addControl(buttonPXS,11,0);  
+ 
+   let buttonPXR =  Button.CreateSimpleButton("buttonPXR", "-");
+   buttonPXR.width = "20px"
+   buttonPXR.height = "20px";
+   //button4.top = "50px";
+   buttonPXR.color = "black";
+   buttonPXR.cornerRadius = 5;
+   buttonPXR.background = "white";
+  
+   grid.addControl(buttonPXR,11,2);  
+
+   textInputX.width = "100px";
+   textInputX.maxWidth = "100px";
+   textInputX.height = "20px";
+   textInputX.text = mesh.position.x;
+   textInputX.color = "black";
+   textInputX.background = "white";
+   textInputX.focusedBackground = "green";
+   textInputX.fontSize = 15;
+ 
+   textInputX.onTextChangedObservable.add(function(value){
+       mesh.position.x = +value.text;
+       selectedPOI.x = +value.text;
+       //startingPoint = mesh.position;
+   });
+
+   buttonPXS.onPointerUpObservable.add(() => {
+    let a:number = +textInputX.text;
+    a = a + 0.1;
+    textInputX.text = a.toString();
+    mesh.position.x = a;
+    selectedPOI.x = a;
+  });
+
+  buttonPXR.onPointerUpObservable.add(() => {
+    let a:number = +textInputX.text;
+    a = a - 0.1;
+    textInputX.text = a.toString();
+    mesh.position.x = a;
+    selectedPOI.x = a;
+  });
+   grid.addControl(textInputX,11,1);
+
+   var textBlock = new TextBlock();
+   textBlock.text = "Position Y:";
+   textBlock.color = "black"
+   textBlock.height = "15px";
+   textBlock.fontSize = 15;
+ 
+   grid.addControl(textBlock,12,1); 
+ 
+   let buttonPYS =  Button.CreateSimpleButton("buttonPYS", "+");
+   buttonPYS.width = "20px"
+   buttonPYS.height = "20px";
+   //button4.top = "50px";
+   buttonPYS.color = "black";
+   buttonPYS.cornerRadius = 5;
+   buttonPYS.background = "white";
+  
+   grid.addControl(buttonPYS,13,0);  
+ 
+   let buttonPYR =  Button.CreateSimpleButton("buttonPYR", "-");
+   buttonPYR.width = "20px"
+   buttonPYR.height = "20px";
+   //button4.top = "50px";
+   buttonPYR.color = "black";
+   buttonPYR.cornerRadius = 5;
+   buttonPYR.background = "white";
+  
+   grid.addControl(buttonPYR,13,2);  
+ 
+   textInputY.width = "100px";
+   textInputY.maxWidth = "100px";
+   textInputY.height = "20px";
+   textInputY.text = mesh.position.y;
+   textInputY.color = "black";
+   textInputY.background = "white";
+   textInputY.focusedBackground = "green";
+   textInputY.fontSize = 15;
+ 
+   textInputY.onTextChangedObservable.add(function(value){
+       mesh.position.y = +value.text;
+       selectedPOI.y = +value.text;
+       //startingPoint = mesh.position;
+   });
+
+   buttonPYS.onPointerUpObservable.add(() => {
+    let a:number = +textInputY.text;
+    a = a + 0.1;
+    textInputY.text = a.toString();
+    mesh.position.y = a;
+    selectedPOI.y = a;
+  });
+
+  buttonPYR.onPointerUpObservable.add(() => {
+    let a:number = +textInputY.text;
+    a = a - 0.1;
+    textInputY.text = a.toString();
+    mesh.position.y = a;
+    selectedPOI.y = a;
+  });
+   grid.addControl(textInputY,13,1);
+ 
+ 
+   var textBlock = new TextBlock();
+   textBlock.text = "Position Z:";
+   textBlock.color = "black"
+   textBlock.height = "15px";
+   textBlock.fontSize = 15;
+   grid.addControl(textBlock,14,1); 
+ 
+
+   let buttonPZS =  Button.CreateSimpleButton("buttonPZS", "+");
+   buttonPZS.width = "20px"
+   buttonPZS.height = "20px";
+   //button4.top = "50px";
+   buttonPZS.color = "black";
+   buttonPZS.cornerRadius = 5;
+   buttonPZS.background = "white";
+  
+   grid.addControl(buttonPZS,15,0);  
+ 
+   let buttonPZR =  Button.CreateSimpleButton("buttonPZR", "-");
+   buttonPZR.width = "20px"
+   buttonPZR.height = "20px";
+   //button4.top = "50px";
+   buttonPZR.color = "black";
+   buttonPZR.cornerRadius = 5;
+   buttonPZR.background = "white";
+  
+   grid.addControl(buttonPZR,15,2);  
+
+   textInputZ.width = "100px";
+   textInputZ.maxWidth = "100px";
+   textInputZ.height = "20px";
+   textInputZ.text = mesh.position.z;
+   textInputZ.color = "black";
+   textInputZ.background = "white";
+   textInputZ.fontSize = 15;
+   textInputZ.focusedBackground = "green";
+   textInputZ.onTextChangedObservable.add(function(value){
+       mesh.position.z = +value.text;
+       selectedPOI.z = +value.text;
+       //startingPoint = mesh.position;
+   });
+
+
+   buttonPZS.onPointerUpObservable.add(() => {
+    let a:number = +textInputZ.text;
+    a = a + 0.1;
+    textInputZ.text = a.toString();
+    mesh.position.z = a;
+    selectedPOI.z = a;
+  });
+
+  buttonPZR.onPointerUpObservable.add(() => {
+    let a:number = +textInputZ.text;
+    a = a - 0.1;
+    textInputZ.text = a.toString();
+    mesh.position.z = a;
+    selectedPOI.z = a;
+  });
+
+   grid.addControl(textInputZ,15,1);
+
+
+  let setColorTitle = (color: any) => {   
+
+    var DTHeight = 1.5 * 25; //or set as wished
+    var planeHeight = 1;
+ 
+    //Calcultae ratio
+    var ratio = planeHeight/DTHeight;
+ 
+    var temp = new DynamicTexture("DynamicTexture", 64, scene);
+    var tmpctx = temp.getContext();
+    tmpctx.font =  "25px " + font_type;;
+    let DTWidth= tmpctx.measureText(this.Eclass[id].POIS.name).width + 8;
+    console.log(DTWidth);
+ 
+    //Set width an height for plane
+    var planeWidth = DTWidth * ratio;
+
+    //this.Eclass[id].plane2.scaling.x = planeWidth;
+    var plane = MeshBuilder.CreatePlane("plane", {width:planeWidth, height:planeHeight}, scene);
+
+    plane.position.x = this.Eclass[id].plane.position.x ;
+    plane.position.y = this.Eclass[id].plane.position.y;
+    plane.position.z = this.Eclass[id].plane.position.z ;  
+
+      /*BACK*/
+      var plane2 = MeshBuilder.CreatePlane("plane", {width:planeWidth, height:planeHeight}, scene);
+
+      plane2.position.x = plane.position.x ;
+      plane2.position.y = plane.position.y ;
+      plane2.position.z = plane.position.z ;  
+      plane2.rotation.y = Math.PI;
+
+   
+
+//////
+    var dynamicTexture = new DynamicTexture("DynamicTexture", {width:DTWidth, height:DTHeight}, scene,false);
+    //Check width of text for given font type at any size of font
+    var ctx = dynamicTexture.getContext();
+    var size = 12; //any value will work
+    ctx.font = size + "px " + font_type;
+
+///
 
     var size = 12; //any value will work
-   ctx.font = size + "px " + font_type;
-   var textWidth = ctx.measureText( this.Eclass[id].POIS.name).width;
+    ctx.font = size + "px " + font_type;
    
-   //Calculate ratio of text width to size of font used
-   var ratio = textWidth/size;
- 
- //set font to be actually used to write text on dynamic texture
-   var font_size = Math.floor((3*45) / (ratio * 1.5)); //size of multiplier (1) can be adjusted, increase for smaller text
+   var mat = new StandardMaterial("mat", scene);
+   mat.diffuseTexture = this.Eclass[id].text;
+   var font_size = 25;
    var font = font_size + "px " + font_type;
-    switch(but) {
-            case 0: 
-            w = true;
-            c= false;
-            //this.Eclass[id].text.color = "White";
-            this.Eclass[id].text.drawText(this.Eclass[id].POIS.name, null, null, font, "white","black", true,true);
-            this.Eclass[id].POIS.titleColor = "White";
 
-            break
-            case 1: 
-            //this.Eclass[id].text.color = "White";
-            w= false;
-            c = true;
-            this.Eclass[id].text.drawText(this.Eclass[id].POIS.name, null, null, font, "black", "white", true,true);
-            this.Eclass[id].POIS.titleColor = "Colored";
-            break
-        }
+   this.Eclass[id].text = dynamicTexture;
+
+   this.Eclass[id].text.drawText(this.Eclass[id].POIS.name, null, null, font, color,this.Eclass[id].lineas.color , true,true);
+   this.Eclass[id].POIS.titleColor = color;
+    console.log(color);
+
+    plane.material = mat;
+    plane2.material = mat;
+
+    this.Eclass[id].plane.dispose();
+    this.Eclass[id].plane2.dispose();
+
+    this.Eclass[id].plane = plane;
+    this.Eclass[id].plane2 = plane2;
+
+    this.Eclass[id].lineas.add(plane);
+
+    this.Eclass[id].plane.material = mat;
   }
-   var colorGroup = new RadioGroup("Title Color:");
-   if(this.Eclass[id].POIS.titleColor == "White"){
-      w = true;
-      c=false;
-   }
-   else{
-      c=true;
-      w = false;
-   }
-	  colorGroup.addRadio("White", setColorTitle, w);
-    colorGroup.addRadio("Colored", setColorTitle,c);
-    
-
-    var selectBox = new SelectionPanel("sp", [colorGroup]);
-    selectBox.width = "120px";
-    selectBox.height = "100px";
-    selectBox.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-
-
-    panel.addControl(selectBox);
 
 
    let button4 =  Button.CreateSimpleButton("but4", "Remove");
@@ -610,7 +874,7 @@ let elemDown =  (mesh: any,id: any) => {
    button4.onPointerUpObservable.add(function() {
           removePOI(mesh,id);
    });
-   panel.addControl(button4);  
+   grid.addControl(button4,16,1);  
 }
 
 var elemUp = function (name:any) {
@@ -621,7 +885,7 @@ var elemUp = function (name:any) {
 
   if(currentMesh!= null && currentMesh.name != name ){
       hl.removeMesh(currentMesh);
-      advancedTexture.removeControl(panel);
+      advancedTexture.removeControl(grid);
   }
 }
 
@@ -664,7 +928,7 @@ this.Eclass[id].plane2.dispose();
   //this.etiquetas[id] = null;
   mesh.dispose();
 
-  advancedTexture.removeControl(panel);
+  advancedTexture.removeControl(grid);
 }
 
 var getGroundPosition = function () {
@@ -694,7 +958,7 @@ let loadData = async () =>{
           //this.spheres[this.elemento-1].material.specularColor.copyFrom(poi.color);
           this.Eclass[this.elemento-1].spheres.material.emissiveColor.copyFrom(poi.color);
           this.Eclass[this.elemento-1].spheres.material.specularColor.copyFrom(poi.color);
-          this.Eclass[this.elemento-1].plane.material.diffuseColor.copyFrom(poi.color);
+          //this.Eclass[this.elemento-1].plane.material.diffuseColor.copyFrom(poi.color);
           let color = new Color3(poi.color.r,poi.color.g,poi.color.b)
           this.Eclass[this.elemento-1].lineas.color = color.toHexString();
       }

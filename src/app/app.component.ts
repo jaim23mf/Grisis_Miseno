@@ -32,7 +32,10 @@ export class AppComponent {
       this.json = jsonData;
       console.log(this.json);
       this.readJson(this.json);
-    });
+    }).catch(function(error){
+      console.log(error);
+      alert("Error loading model");
+    })
   }
 
   readJson(data: any){

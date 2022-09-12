@@ -55729,15 +55729,15 @@
 					this.moveHere(this.scene.getActiveCamera());
 				}
 				this.dispatchEvent({type: 'click', target: this});*/
-				//console.log("CLick!!!" + this._title);
+				console.log("CLick!!!" + this._title);
 				window.postMessage({
-					"type": "3d.sensor.click",
+					"type": "potree.sensor.click",
 					"data": {
 					  "name":this._title
 					}
 					});
 					window.top.postMessage({
-						"type": "3d.sensor.click",
+						"type": "potree.sensor.click",
 						"data": {
 						  "name":this._title
 						}
@@ -76223,7 +76223,7 @@ ENDSEC
 					slide: (event, ui) => {material.weightSourceID = ui.value;}
 				});
 
-				panel.find(`#materials\\.color\\.picker`).spectrum({
+				/*panel.find(`#materials\\.color\\.picker`).spectrum({
 					flat: true,
 					showInput: true,
 					preferredFormat: 'rgb',
@@ -76245,7 +76245,7 @@ ENDSEC
 				this.addVolatileListener(material, "color_changed", () => {
 					panel.find(`#materials\\.color\\.picker`)
 						.spectrum('set', `#${material.color.getHexString()}`);
-				});
+				});*/
 
 				let updateHeightRange = function () {
 					
@@ -80129,7 +80129,7 @@ ENDSEC
 				defaultColor = `rgb(${defaultColor})`;
 
 
-				elColorPicker.spectrum({
+				/*elColorPicker.spectrum({
 					// flat: true,
 					color: defaultColor,
 					showInput: true,
@@ -80146,7 +80146,7 @@ ENDSEC
 						const c = [rgb.r / 255, rgb.g / 255, rgb.b / 255, 1];
 						classification.color = c;
 					}
-				});
+				});*/
 
 				elClassificationList.append(element);
 			};

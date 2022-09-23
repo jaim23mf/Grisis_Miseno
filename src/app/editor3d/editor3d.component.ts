@@ -349,12 +349,13 @@ let pointerDown = (mesh: AbstractMesh)=>{
 
   for(let i=0 ; i<this.Eclass.length;i++){
     if(this.Eclass[i].plane == mesh || this.Eclass[i].plane2 == mesh){
-      //alert("PopUp! --> " + i + " -- " + this.Eclass[i].POIS.name);
+      console.log("PopUp! --> " + i + " -- " + this.Eclass[i].POIS.sensorId);
+
       window.postMessage({
         "type": "3d.sensor.click",
         "data": {
           "name":this.Eclass[i].POIS.name,
-          "sensorId" : this.Eclass[i].POIS.sensoId
+          "sensorId" : this.Eclass[i].POIS.sensorId
         }
         });
 
@@ -362,7 +363,7 @@ let pointerDown = (mesh: AbstractMesh)=>{
           "type": "3d.sensor.click",
           "data": {
             "name":this.Eclass[i].POIS.name,
-            "sensorId" : this.Eclass[i].POIS.sensoId
+            "sensorId" : this.Eclass[i].POIS.sensorId
           }
           });
     }

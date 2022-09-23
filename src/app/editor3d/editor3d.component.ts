@@ -351,13 +351,13 @@ let pointerDown = (mesh: AbstractMesh)=>{
     if(this.Eclass[i].plane == mesh || this.Eclass[i].plane2 == mesh){
       console.log("PopUp! --> " + i + " -- " + this.Eclass[i].POIS.sensorId);
 
-      window.postMessage({
+      /*window.postMessage({
         "type": "3d.sensor.click",
         "data": {
           "name":this.Eclass[i].POIS.name,
           "sensorId" : this.Eclass[i].POIS.sensorId
         }
-        });
+        });*/
 
         window.top!.postMessage({
           "type": "3d.sensor.click",
@@ -1166,9 +1166,9 @@ showSaveAndExit(){
       if(data) {
           console.log(data);
           this.saveData();
-          window.postMessage({
+          /*window.postMessage({
             "type": "3d.close" // For 3d
-            });
+            });*/
             window.top!.postMessage({
               "type": "3d.close" // For 3d
               });
@@ -1187,9 +1187,9 @@ showCancel() {
           //We get modal result
           if(data) {
               console.log(data);
-              window.postMessage({
+              /*window.postMessage({
                 "type": "3d.close" // For 3d
-                });
+                });*/
                 window.top!.postMessage({
                   "type": "3d.close" // For 3d
                   });

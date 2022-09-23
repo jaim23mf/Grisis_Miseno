@@ -55730,12 +55730,12 @@
 				}
 				this.dispatchEvent({type: 'click', target: this});*/
 				console.log("CLick!!!" + this._title);
-				window.postMessage({
+				/*window.postMessage({
 					"type": "potree.sensor.click",
 					"data": {
 					  "name":this._title
 					}
-					});
+					});*/
 					window.top.postMessage({
 						"type": "potree.sensor.click",
 						"data": {

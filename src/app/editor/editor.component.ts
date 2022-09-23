@@ -170,9 +170,9 @@ export class EditorComponent implements OnInit {
             //We get modal result
             if(data) {
                 console.log(data);
-                window.postMessage({
+                /*window.postMessage({
                   "type": "3d.pointcloud.change" // For pointscloud
-                });
+                });*/
                 window.top!.postMessage({
                   "type": "3d.pointcloud.change" // For pointscloud
                 });
@@ -218,9 +218,9 @@ export class EditorComponent implements OnInit {
         if(data) {
             console.log(data);
             this.savePotree();
-            window.postMessage({
+            /*window.postMessage({
               "type": "pointscloud.close" // For 3d
-              });
+              });*/
               window.top!.postMessage({
                 "type": "pointscloud.close" // For 3d
                 });
@@ -239,9 +239,9 @@ export class EditorComponent implements OnInit {
             //We get modal result
             if(data) {
                 console.log(data);
-                window.postMessage({
+                /*window.postMessage({
                   "type": "pointscloud.close" // For 3d
-                  });
+                  });*/
                   window.top!.postMessage({
                     "type": "pointscloud.close" // For 3d
                     });
